@@ -124,7 +124,7 @@ while($number!="q"){
 
 function get_value_date($date){
     $endpoint =$date;
-    $access_key = 'fcec1fdd6db437c19487eb77cef7e177';
+    $access_key = 'f14f5c7f95305ad5b49ecd23504569bf';
 
     // Initialize CURL:
     $ch = curl_init('http://data.fixer.io/api/'.$endpoint.'?access_key='.$access_key.'');
