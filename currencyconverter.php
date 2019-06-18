@@ -7,8 +7,8 @@ while($number!="q"){
     $currentvalue="";
     $value_thirtydaysago="";
     // Number of dys back to check and how many rows in columns 
-    $number_of_days=30;$amount_in_column=20;
-    // This is for the program shouldnt us old values
+    $number_of_days=30;$amount_in_column=40;
+    // This is for the program shouldnt use old values
     unset($x);
     // get an input
     $date_first = readline("Enter a date in format YYYY/MM/DD empty date uses today or q to quit:");
@@ -22,27 +22,25 @@ while($number!="q"){
     $valid_date=validateDate($date_first);
         // Not a value of format YYYY/MM/DD
         // Doesnt allow values such as 2010/13/12 or 2019/02/29 either
-    if($valid_date==TRUE){
+    if($date_first==''){    
+        // I convert to a epoch timestamp and from there convert to right format.
+        $date_first=date('Y-m-d',strtotime('now'));
+        $date_first_asvalue=strtotime('now');
+    }elseif($valid_date==TRUE){
         $date_first_asvalue=strtotime($date_first);
     }else{
         echo 'No valid date entered'.PHP_EOL;
         continue;
     }
-    if($date_first==''){    
-        // I convert to a epoch timestamp and from there convert to right format.
-        $date_first=date('Y-m-d',strtotime('now'));
-        $date_first_asvalue=strtotime('now');
+    
         // Future dates dates cant be used by the api
-    }elseif($date_first_asvalue> strtotime('now')){
+    if($date_first_asvalue> strtotime('now')){
         echo 'Cant enter future dates'.PHP_EOL;
         continue;
         // Cant use date before year 2000
     }elseif($date_first_asvalue< strtotime('2000-01-31')){
         echo 'Cant enter dates before year 2000'.PHP_EOL;
         continue;
-    }else{
-        $date_first_asvalue=strtotime($date_first);
-        $date_first=date('Y-m-d',$date_first_asvalue);
     }
     // The second date
     $date_second=date('Y-m-d',$date_first_asvalue-$number_of_days*24*60*60);
@@ -51,6 +49,7 @@ while($number!="q"){
     // Reads everything into an array if both values are valid
     foreach ($currentvalue as $key=>$value){
         if($key!=""&&$value!=""&&$value_thirtydaysago[$key]!=""){
+            // Take four valuesand multiply that with 100 to get %
             $currencyarr[$key]=100*sprintf('%0.4f',$value/$value_thirtydaysago[$key]);
         }
     }
@@ -97,6 +96,7 @@ while($number!="q"){
             $n++;
         }
         
+        // Each column is equally long 
         $amount_of_headers=ceil(count($currentvalue)/$amount_in_column);
         for($n2=0;$n2<$amount_of_headers;$n2++){   
             $header.='Item Country Percent | ';
@@ -108,8 +108,10 @@ while($number!="q"){
         echo '   '.$header.PHP_EOL;
         echo '   '.$filling.PHP_EOL;
         // Fills out the last rows in the last column if the arent equal
+        
         $overflow=count($currencyarr)-floor(count($currencyarr)/count($x))*$amount_in_column-2;
         $nn=0;
+        // Fill out the last column
         foreach($x as $xitem){
             if($nn>$overflow){
                 echo '   '.str_pad($xitem,strlen($xitem)+21).'|'.PHP_EOL;
@@ -121,7 +123,10 @@ while($number!="q"){
         echo '   '.$filling.PHP_EOL;
     }
 
-
+// A function to get the currencyvalues from the API 
+// from the dokumentation 
+// Indata is the key and date 
+// outdata is JSON object
 function get_value_date($date){
     $endpoint =$date;
     $access_key = 'f14f5c7f95305ad5b49ecd23504569bf';
@@ -141,6 +146,10 @@ function get_value_date($date){
     return $exchangeRates['rates'];
 }
 
+// Pads the string to specific design
+// under 10 and over 100 is different
+// input is number, key value, and how the colours should look
+// output is the string for that value
 function pad_output($n,$key,$value,$extra,$extraend){
     if($n<10){
         $output=$extra.$n.'  :   '.$key.'   '.$value.$extraend.' | ';
@@ -152,6 +161,10 @@ function pad_output($n,$key,$value,$extra,$extraend){
     return $output;
 }
 
+// Validates the date 
+// indata is the date and format
+// output is the date in the correct format if its valid
+// $d&&$d($format) always returns 0 if false and the format if true
 function validateDate($date, $format = 'Y/m/d'){
     $d = DateTime::createFromFormat($format, $date);
     return $d && $d->format($format) === $date;
